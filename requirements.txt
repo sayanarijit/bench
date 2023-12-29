@@ -1,0 +1,11 @@
+fastapi
+sqlalchemy[asyncio]
+peewee
+psycopg[binary,pool]
+databases[asyncpg,aiopg]
+piccolo[all]
+sqla-fancy-core
+asyncpg
+uvicorn
+psycopg2-binary
+aiopg
