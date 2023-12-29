@@ -5,12 +5,11 @@ import peewee
 import sqlalchemy as sa
 import sqlalchemy.orm
 from fastapi import FastAPI
-from piccolo.columns import Integer, Varchar
-from piccolo.table import Table
+from piccolo import columns as picols
+from piccolo.engine.postgres import PostgresEngine as PiccoloPostgresEngine
+from piccolo.table import Table as PiccoloTable
 from sqla_fancy_core import TableFactory
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-
-from piccolo_conf import DB
 
 # Peewee -------------------------------------------------------------------------------
 peewee_state_default = {"closed": None, "conn": None, "ctx": None, "transactions": None}
@@ -53,10 +52,25 @@ class TaskSqla:
 
 
 # Piccolo ------------------------------------------------------------------------------
-class TaskPiccolo(Table, tablename="task"):
-    id = Integer(primary_key=True)
-    name = Varchar()
-    completed = Integer()
+
+piccollodb = PiccoloPostgresEngine(
+    config={
+        "host": "localhost",
+        "port": 5432,
+        "user": "dev",
+        "password": "dev",
+        "database": "postgres",
+    }
+)
+
+
+class TaskPiccolo(PiccoloTable, tablename="task"):
+    id = picols.Integer(primary_key=True, auto_increment=True)
+    name = picols.Varchar()
+    completed = picols.Boolean()
+
+
+# --------------------------------------------------------------------------------------
 
 
 @dataclass
@@ -96,6 +110,6 @@ def list_peewee():
 
 @app.get("/piccolo", response_model=List[TaskDTO])
 async def list_piccolo():
-    async with DB.transaction():
+    async with piccollodb.transaction():
         result = await TaskPiccolo.select().run()
         return list(result)
