@@ -6,6 +6,7 @@ import sqlalchemy as sa
 from fastapi import FastAPI
 from piccolo import columns as picols
 from piccolo.table import Table as PiccoloTable
+from playhouse.pool import PooledPostgresqlExtDatabase
 from sqla_fancy_core import TableFactory
 from sqlalchemy.ext.asyncio import create_async_engine
 
@@ -13,8 +14,13 @@ import piccolo_conf
 
 # Peewee -------------------------------------------------------------------------------
 peewee_state_default = {"closed": None, "conn": None, "ctx": None, "transactions": None}
-peeweedb = peewee.PostgresqlDatabase(
-    "postgres", user="dev", password="dev", host="localhost", port=5432
+peeweedb = PooledPostgresqlExtDatabase(
+    "postgres",
+    user="dev",
+    password="dev",
+    host="localhost",
+    port=5432,
+    max_connections=20,
 )
 
 
@@ -31,12 +37,12 @@ class TaskPeewee(peewee.Model):
 
 tf = TableFactory()
 sqla_psycopg2_engine = sa.create_engine(
-    "postgresql+psycopg2://dev:dev@localhost/postgres"
+    "postgresql+psycopg2://dev:dev@localhost/postgres", pool_size=20, max_overflow=0
 )
 
 
 sqla_asyncpg_engine = create_async_engine(
-    "postgresql+asyncpg://dev:dev@localhost/postgres"
+    "postgresql+asyncpg://dev:dev@localhost/postgres", pool_size=20, max_overflow=0
 )
 
 
@@ -75,7 +81,7 @@ app = FastAPI()
 @app.on_event("startup")
 async def startup():
     peeweedb.create_tables([TaskPeewee])
-    await piccolodb.start_connection_pool()
+    await piccolodb.start_connection_pool(max_size=20)
 
 
 @app.get("/sqla-asyncpg", response_model=List[TaskDTO])
