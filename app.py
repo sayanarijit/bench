@@ -73,8 +73,9 @@ app = FastAPI()
 
 
 @app.on_event("startup")
-def startup():
+async def startup():
     peeweedb.create_tables([TaskPeewee])
+    await piccolodb.start_connection_pool()
 
 
 @app.get("/sqla-asyncpg", response_model=List[TaskDTO])
