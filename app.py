@@ -6,10 +6,11 @@ import sqlalchemy as sa
 import sqlalchemy.orm
 from fastapi import FastAPI
 from piccolo import columns as picols
-from piccolo.engine.postgres import PostgresEngine as PiccoloPostgresEngine
 from piccolo.table import Table as PiccoloTable
 from sqla_fancy_core import TableFactory
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+import piccolo_conf
 
 # Peewee -------------------------------------------------------------------------------
 peewee_state_default = {"closed": None, "conn": None, "ctx": None, "transactions": None}
@@ -53,15 +54,7 @@ class TaskSqla:
 
 # Piccolo ------------------------------------------------------------------------------
 
-piccollodb = PiccoloPostgresEngine(
-    config={
-        "host": "localhost",
-        "port": 5432,
-        "user": "dev",
-        "password": "dev",
-        "database": "postgres",
-    }
-)
+piccolodb = piccolo_conf.DB
 
 
 class TaskPiccolo(PiccoloTable, tablename="task"):
@@ -75,6 +68,7 @@ class TaskPiccolo(PiccoloTable, tablename="task"):
 
 @dataclass
 class TaskDTO:
+    id: int
     name: str
     completed: bool
 
@@ -94,6 +88,15 @@ async def list_sqla_asyncpg():
         return list(result.mappings())
 
 
+@app.get("/sqla-asyncpg/{id}", response_model=TaskDTO)
+async def get_sqla_asyncpg(id: int):
+    async with sqla_asyncpg_sessionmaker() as session:
+        result = await session.execute(
+            sa.select(TaskSqla.Table).where(TaskSqla.id == id)
+        )
+        return next(result.mappings())
+
+
 @app.get("/sqla-psycopg2", response_model=List[TaskDTO])
 def list_sqla_psycopg2():
     with sqla_psycopg2_sessionmaker() as session:
@@ -101,15 +104,38 @@ def list_sqla_psycopg2():
         return list(result.mappings())
 
 
+@app.get("/sqla-psycopg2/{id}", response_model=TaskDTO)
+def get_sqla_psycopg2():
+    with sqla_psycopg2_sessionmaker() as session:
+        result = session.execute(sa.select(TaskSqla.Table).where(TaskSqla.id == 1))
+        return next(result.mappings())
+
+
 @app.get("/peewee", response_model=List[TaskDTO])
 def list_peewee():
     with peeweedb.transaction():
-        result = TaskPeewee.select().dicts()
-        return list(result)
+        with peeweedb.atomic():
+            result = TaskPeewee.select()
+            return list(result.dicts())
+
+
+@app.get("/peewee/{id}", response_model=TaskDTO)
+def get_peewee(id: int):
+    with peeweedb.transaction():
+        with peeweedb.atomic():
+            result = TaskPeewee.select().where(TaskPeewee.id == id)
+            return result.dicts()[0]
 
 
 @app.get("/piccolo", response_model=List[TaskDTO])
 async def list_piccolo():
-    async with piccollodb.transaction():
+    async with piccolodb.transaction():
         result = await TaskPiccolo.select().run()
         return list(result)
+
+
+@app.get("/piccolo/{id}", response_model=TaskDTO)
+async def get_piccolo(id: int):
+    async with piccolodb.transaction():
+        result = await TaskPiccolo.select().where(TaskPiccolo.id == id).run()
+        return result[0]
