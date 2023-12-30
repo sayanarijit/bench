@@ -3,7 +3,7 @@ from typing import List
 
 import peewee
 import sqlalchemy as sa
-from fastapi import FastAPI
+from fastapi import FastAPI, Form
 from piccolo import columns as picols
 from piccolo.table import Table as PiccoloTable
 from playhouse.pool import PooledPostgresqlExtDatabase
@@ -60,7 +60,7 @@ piccolodb = piccolo_conf.DB
 
 
 class TaskPiccolo(PiccoloTable, tablename="task"):
-    id = picols.Integer(primary_key=True, auto_increment=True)
+    id = picols.Serial(primary_key=True)
     name = picols.Varchar()
     completed = picols.Boolean()
 
@@ -100,17 +100,6 @@ async def get_sqla_asyncpg(id: int):
         return next(result.mappings())
 
 
-@app.get("/sqla-asyncpg-create/", response_model=int)
-async def create_sqla_asyncpg(name: str) -> int:
-    async with sqla_asyncpg_engine.begin() as session:
-        result = await session.execute(
-            sa.insert(TaskSqla.Table)
-            .values({TaskSqla.name: name, TaskSqla.completed: True})
-            .returning(TaskSqla.id)
-        )
-        return result.scalar_one()
-
-
 @app.get("/sqla-psycopg2", response_model=List[TaskDTO])
 def list_sqla_psycopg2():
     with sqla_psycopg2_engine.begin() as session:
@@ -127,26 +116,16 @@ def get_sqla_psycopg2():
 
 @app.get("/peewee", response_model=List[TaskDTO])
 def list_peewee():
-    with peeweedb.transaction():
-        with peeweedb.atomic():
-            result = TaskPeewee.select()
-            return list(result.dicts())
+    with peeweedb.atomic():
+        result = TaskPeewee.select()
+        return list(result.dicts())
 
 
 @app.get("/peewee/{id}", response_model=TaskDTO)
 def get_peewee(id: int):
-    with peeweedb.transaction():
-        with peeweedb.atomic():
-            result = TaskPeewee.select().where(TaskPeewee.id == id)
-            return result.dicts()[0]
-
-
-@app.get("/peewee-create/", response_model=int)
-def create_peewee(name: str) -> int:
-    with peeweedb.transaction():
-        with peeweedb.atomic():
-            result = TaskPeewee.insert(name=name, completed=False).execute()
-            return result
+    with peeweedb.atomic():
+        result = TaskPeewee.select().where(TaskPeewee.id == id)
+        return result.dicts()[0]
 
 
 @app.get("/piccolo", response_model=List[TaskDTO])
@@ -161,3 +140,57 @@ async def get_piccolo(id: int):
     async with piccolodb.transaction():
         result = await TaskPiccolo.select().where(TaskPiccolo.id == id).run()
         return result[0]
+
+
+# Test atomicity -----------------------------------------------------------------------
+
+
+@app.post("/sqla-asyncpg", response_model=int)
+async def create_sqla_asyncpg(name: str = Form(...)) -> int:
+    async with sqla_asyncpg_engine.begin() as session:
+        result = await session.execute(
+            sa.insert(TaskSqla.Table)
+            .values({TaskSqla.name: name, TaskSqla.completed: True})
+            .returning(TaskSqla.id)
+        )
+
+        # assert False
+
+        result = await session.execute(
+            sa.insert(TaskSqla.Table)
+            .values({TaskSqla.name: str(result.scalar_one()), TaskSqla.completed: True})
+            .returning(TaskSqla.id)
+        )
+        return result.scalar_one()
+
+
+@app.post("/peewee", response_model=int)
+def create_peewee(name: str = Form(...)) -> int:
+    with peeweedb.atomic():
+        result = TaskPeewee.insert(name=name, completed=False).execute()
+
+        # assert False
+
+        result = TaskPeewee.insert(name=str(result), completed=False).execute()
+        return result
+
+
+@app.post("/piccolo", response_model=int)
+async def create_piccolo(name: str = Form(...)) -> int:
+    async with piccolodb.transaction():
+        result = (
+            await TaskPiccolo.insert(TaskPiccolo(name=name, completed=False))
+            .returning(TaskPiccolo.id)
+            .run()
+        )
+
+        # assert False
+
+        result = (
+            await TaskPiccolo.insert(
+                TaskPiccolo(name=str(result[0][TaskPiccolo.id]), completed=False)
+            )
+            .returning(TaskPiccolo.id)
+            .run()
+        )
+        return result[0][TaskPiccolo.id]
