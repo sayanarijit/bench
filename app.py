@@ -4,13 +4,13 @@ from typing import List
 import peewee
 import sqlalchemy as sa
 from fastapi import FastAPI, Form
+from piccolo import columns as picols
+from piccolo.table import Table as PiccoloTable
 from playhouse.pool import PooledPostgresqlExtDatabase
 from sqla_fancy_core import TableFactory
 from sqlalchemy.ext.asyncio import create_async_engine
 
 import piccolo_conf
-from piccolo import columns as picols
-from piccolo.table import Table as PiccoloTable
 
 # Peewee -------------------------------------------------------------------------------
 peewee_state_default = {"closed": None, "conn": None, "ctx": None, "transactions": None}
@@ -119,7 +119,7 @@ def get_sqla_psycopg2():
 def list_peewee():
     with peeweedb.atomic():
         result = TaskPeewee.select()
-        return list(result.dicts())
+        return result.dicts()
 
 
 @app.get("/peewee/{id}", response_model=TaskDTO)
@@ -133,7 +133,7 @@ def get_peewee(id: int):
 async def list_piccolo():
     async with piccolodb.transaction():
         result = await TaskPiccolo.select().run()
-        return list(result)
+        return result
 
 
 @app.get("/piccolo/{id}", response_model=TaskDTO)
