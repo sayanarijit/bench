@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 from typing import List
 
+import asyncpg
 import peewee
 import sqlalchemy as sa
-from fastapi import FastAPI, Form
+from fastapi import Depends, FastAPI, Form
+from fastapi_asyncpg import configure_asyncpg
 from piccolo import columns as picols
 from piccolo.table import Table as PiccoloTable
 from playhouse.pool import PooledPostgresqlExtDatabase
@@ -66,6 +68,21 @@ class TaskPiccolo(PiccoloTable, tablename="task"):
     completed = picols.Boolean()
 
 
+# Asyncpg ------------------------------------------------------------------------------
+
+
+async def phony(_):
+    pass
+
+
+app = FastAPI()
+asyncpgdb = configure_asyncpg(
+    app,
+    "postgresql://dev:dev@localhost/postgres",
+    max_size=20,
+    init_db=phony,
+)
+
 # --------------------------------------------------------------------------------------
 
 
@@ -74,9 +91,6 @@ class TaskDTO:
     id: int
     name: str
     completed: bool
-
-
-app = FastAPI()
 
 
 @app.on_event("startup")
@@ -141,6 +155,18 @@ async def get_piccolo(id: int):
     async with piccolodb.transaction():
         result = await TaskPiccolo.select().where(TaskPiccolo.id == id).first().run()
         return result
+
+
+@app.get("/asyncpg", response_model=List[TaskDTO])
+async def list_asyncpg(db=Depends(asyncpgdb.atomic)):
+    result = await db.fetch("SELECT * FROM task")
+    return list(dict(row) for row in result)
+
+
+@app.get("/asyncpg/{id}", response_model=TaskDTO)
+async def get_asyncpg(id: int, db=Depends(asyncpgdb.atomic)):
+    result = await db.fetch("SELECT * FROM task WHERE id = $1", id)
+    return dict(result[0])
 
 
 # Test atomicity -----------------------------------------------------------------------
