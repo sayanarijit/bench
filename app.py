@@ -9,6 +9,7 @@ from fastapi_asyncpg import configure_asyncpg
 from piccolo import columns as picols
 from piccolo.table import Table as PiccoloTable
 from playhouse.pool import PooledPostgresqlExtDatabase
+from pydantic import BaseModel
 from sqla_fancy_core import TableFactory
 from sqlalchemy.ext.asyncio import create_async_engine
 
@@ -23,6 +24,9 @@ peeweedb = PooledPostgresqlExtDatabase(
     host="localhost",
     port=5432,
     max_connections=20,
+)
+peewee_no_pool_db = peewee.PostgresqlDatabase(
+    "postgres", user="dev", password="dev", host="localhost", port=5432
 )
 
 
@@ -86,8 +90,7 @@ asyncpgdb = configure_asyncpg(
 # --------------------------------------------------------------------------------------
 
 
-@dataclass
-class TaskDTO:
+class TaskDTO(BaseModel):
     id: int
     name: str
     completed: bool
@@ -132,15 +135,15 @@ def get_sqla_psycopg2():
 @app.get("/peewee", response_model=List[TaskDTO])
 def list_peewee():
     with peeweedb.atomic():
-        result = TaskPeewee.select()
-        return result.dicts()
+        result = TaskPeewee.select().dicts()
+        return result
 
 
 @app.get("/peewee/{id}", response_model=TaskDTO)
 def get_peewee(id: int):
     with peeweedb.atomic():
-        result = TaskPeewee.select().where(TaskPeewee.id == id)
-        return result.dicts()[0]
+        result = TaskPeewee.select().where(TaskPeewee.id == id).dicts()
+        return result[0]
 
 
 @app.get("/piccolo", response_model=List[TaskDTO])
@@ -160,13 +163,27 @@ async def get_piccolo(id: int):
 @app.get("/asyncpg", response_model=List[TaskDTO])
 async def list_asyncpg(db=Depends(asyncpgdb.atomic)):
     result = await db.fetch("SELECT * FROM task")
-    return list(dict(row) for row in result)
+    return [dict(row) for row in result]
 
 
 @app.get("/asyncpg/{id}", response_model=TaskDTO)
 async def get_asyncpg(id: int, db=Depends(asyncpgdb.atomic)):
     result = await db.fetch("SELECT * FROM task WHERE id = $1", id)
     return dict(result[0])
+
+
+@app.get("/peewee-no-pool", response_model=List[TaskDTO])
+def list_peewee_no_pool():
+    with peewee_no_pool_db.atomic():
+        result = TaskPeewee.select().dicts()
+        return result
+
+
+@app.get("/peewee-no-pool/{id}", response_model=TaskDTO)
+def get_peewee_no_pool(id: int):
+    with peewee_no_pool_db.atomic():
+        result = TaskPeewee.select().where(TaskPeewee.id == id).dicts()
+        return result[0]
 
 
 # Test atomicity -----------------------------------------------------------------------

@@ -1,109 +1,171 @@
-Benchmark done with 25 records
+### Asyncpg
+
+```
+Running 10s test @ http://127.0.0.1:8081/asyncpg
+  6 threads and 1000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   503.07ms  477.72ms   1.99s    39.91%
+    Req/Sec   301.16    114.14   640.00     67.57%
+  17715 requests in 10.03s, 18.89MB read
+  Socket errors: connect 0, read 0, write 0, timeout 567
+Requests/sec:   1766.05
+Transfer/sec:      1.88MB
+
+Running 10s test @ http://127.0.0.1:8081/asyncpg
+  6 threads and 1000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   516.78ms  464.69ms   2.00s    52.20%
+    Req/Sec   313.17    116.27   707.00     69.06%
+  18673 requests in 10.04s, 2.91MB read
+  Socket errors: connect 0, read 0, write 0, timeout 249
+Requests/sec:   1860.21
+Transfer/sec:    297.27KB
+```
 
 ### SQLA + asyncpg
 
 ```
-➜  bench git:(main) ✗ wrk http://127.0.0.1:8081/sqla-asyncpg -c 1000 -t 6
 Running 10s test @ http://127.0.0.1:8081/sqla-asyncpg
   6 threads and 1000 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency   494.30ms  621.36ms   2.00s    77.61%
-    Req/Sec    35.28     17.07   100.00     76.88%
-  1900 requests in 10.06s, 3.39MB read
-  Socket errors: connect 0, read 0, write 0, timeout 1315
-Requests/sec:    188.81
-Transfer/sec:    345.35KB
+    Latency   906.40ms  433.46ms   2.00s    76.89%
+    Req/Sec   171.94    114.77   464.00     59.74%
+  9510 requests in 10.04s, 10.14MB read
+  Socket errors: connect 0, read 0, write 0, timeout 418
+Requests/sec:    947.34
+Transfer/sec:      1.01MB
 
-➜  bench git:(main) ✗ wrk http://127.0.0.1:8081/sqla-asyncpg -c 1000 -t 6 -s wrk.lua
 Running 10s test @ http://127.0.0.1:8081/sqla-asyncpg
   6 threads and 1000 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency   986.13ms  438.21ms   2.00s    71.84%
-    Req/Sec   134.46     78.30   404.00     66.44%
-  7882 requests in 10.07s, 1.23MB read
-  Socket errors: connect 0, read 0, write 0, timeout 896
-Requests/sec:    782.92
-Transfer/sec:    125.11KB
+    Latency   766.07ms  474.45ms   2.00s    67.58%
+    Req/Sec   176.39     76.73   590.00     72.20%
+  10431 requests in 10.04s, 1.63MB read
+  Socket errors: connect 0, read 0, write 0, timeout 770
+Requests/sec:   1038.59
+Transfer/sec:    165.97KB
 ```
 
 ### SQLA + psycopg2
 
 ```
-➜  bench git:(main) ✗ wrk http://127.0.0.1:8081/sqla-psycopg2 -c 1000 -t 6
 Running 10s test @ http://127.0.0.1:8081/sqla-psycopg2
   6 threads and 1000 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     1.54s   337.59ms   1.98s    72.93%
-    Req/Sec    36.21     38.52   252.00     85.92%
-  1694 requests in 10.06s, 3.03MB read
-  Socket errors: connect 0, read 0, write 0, timeout 848
-Requests/sec:    168.42
-Transfer/sec:    308.06KB
+    Latency     1.00s   239.99ms   1.99s    77.32%
+    Req/Sec   141.41     94.80   505.00     68.48%
+  8170 requests in 10.03s, 8.71MB read
+  Socket errors: connect 0, read 0, write 0, timeout 415
+Requests/sec:    814.51
+Transfer/sec:      0.87MB
 
-➜  bench git:(main) ✗ wrk http://127.0.0.1:8081/sqla-psycopg2 -c 1000 -t 6 -s wrk.lua
 Running 10s test @ http://127.0.0.1:8081/sqla-psycopg2
   6 threads and 1000 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency   578.71ms  303.95ms   1.14s    63.26%
-    Req/Sec   103.35     52.60   404.00     71.22%
-  4326 requests in 10.06s, 688.61KB read
-  Socket errors: connect 0, read 0, write 0, timeout 643
-Requests/sec:    430.14
-Transfer/sec:     68.47KB
+    Latency   692.27ms  279.85ms   2.00s    78.93%
+    Req/Sec   175.54     70.26   484.00     75.76%
+  9832 requests in 10.04s, 1.53MB read
+  Socket errors: connect 0, read 0, write 0, timeout 708
+Requests/sec:    979.49
+Transfer/sec:    155.91KB
+```
+
+### SQLA + psycopg2
+
+```
+Running 10s test @ http://127.0.0.1:8081/sqla-psycopg2
+  6 threads and 1000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   967.79ms  271.35ms   1.99s    78.54%
+    Req/Sec   137.82    105.60   620.00     78.58%
+  8102 requests in 10.03s, 8.64MB read
+  Socket errors: connect 0, read 0, write 0, timeout 482
+Requests/sec:    807.65
+Transfer/sec:      0.86MB
+
+Running 10s test @ http://127.0.0.1:8081/sqla-psycopg2
+  6 threads and 1000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   695.57ms  273.70ms   1.99s    76.57%
+    Req/Sec   174.49     59.96   363.00     71.82%
+  9666 requests in 10.04s, 1.50MB read
+  Socket errors: connect 0, read 0, write 0, timeout 715
+Requests/sec:    962.75
+Transfer/sec:    153.25KB
 ```
 
 ### Piccolo
 
 ```
-➜  bench git:(main) ✗ wrk http://127.0.0.1:8081/piccolo -c 1000 -t 6
 Running 10s test @ http://127.0.0.1:8081/piccolo
   6 threads and 1000 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency   712.28ms  679.30ms   2.00s    75.87%
-    Req/Sec    44.74     23.30   160.00     63.11%
-  2507 requests in 10.06s, 4.48MB read
-  Socket errors: connect 0, read 0, write 0, timeout 1703
-Requests/sec:    249.17
-Transfer/sec:    455.75KB
+    Latency   607.23ms  391.33ms   1.99s    63.89%
+    Req/Sec   269.03    115.97   696.00     71.53%
+  15663 requests in 10.05s, 16.70MB read
+  Socket errors: connect 0, read 0, write 0, timeout 128
+Requests/sec:   1558.53
+Transfer/sec:      1.66MB
 
-➜  bench git:(main) ✗ wrk http://127.0.0.1:8081/piccolo -c 1000 -t 6 -s wrk.lua
 Running 10s test @ http://127.0.0.1:8081/piccolo
   6 threads and 1000 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency   794.01ms  374.33ms   2.00s    77.93%
-    Req/Sec   198.84     84.15   430.00     67.52%
-  11700 requests in 10.05s, 1.83MB read
-  Socket errors: connect 0, read 0, write 0, timeout 185
-Requests/sec:   1164.13
-Transfer/sec:    186.03KB
+    Latency   608.88ms  405.10ms   2.00s    63.05%
+    Req/Sec   257.71     82.01   470.00     69.28%
+  15378 requests in 10.04s, 2.40MB read
+  Socket errors: connect 0, read 0, write 0, timeout 262
+Requests/sec:   1531.51
+Transfer/sec:    244.74KB
+```
+
+### Peewee no pool
+
+```
+Running 10s test @ http://127.0.0.1:8081/peewee-no-pool
+  6 threads and 1000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   944.12ms  460.97ms   1.64s    64.17%
+    Req/Sec   173.23     97.27   570.00     70.20%
+  9810 requests in 10.03s, 3.16MB read
+  Socket errors: connect 0, read 8107, write 0, timeout 0
+  Non-2xx or 3xx responses: 8107
+Requests/sec:    978.07
+Transfer/sec:    322.72KB
+
+Running 10s test @ http://127.0.0.1:8081/peewee-no-pool
+  6 threads and 1000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     1.12s   226.61ms   2.00s    90.79%
+    Req/Sec   165.86     78.70   520.00     77.98%
+  8352 requests in 10.04s, 1.38MB read
+  Socket errors: connect 0, read 8201, write 0, timeout 55
+  Non-2xx or 3xx responses: 8201
+Requests/sec:    831.79
+Transfer/sec:    141.19KB
 ```
 
 ### Peewee
 
-NOTE: Most requests errored
-
 ```
-➜  bench git:(main) ✗ wrk http://127.0.0.1:8081/peewee -c 1000 -t 6
-Running 10s test @ http://127.0.0.1:8081/peewee
+Running 10s test @ http://127.0.0.1:8081/
   6 threads and 1000 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     1.24s   286.14ms   2.00s    87.19%
-    Req/Sec   116.34     69.55   464.00     71.01%
-  6505 requests in 10.06s, 1.59MB read
-  Socket errors: connect 0, read 6190, write 0, timeout 885
-  Non-2xx or 3xx responses: 6190
-Requests/sec:    646.65
-Transfer/sec:    161.83KB
+    Latency    44.33ms   67.35ms   1.98s    99.37%
+    Req/Sec     1.70k   496.32     3.30k    71.67%
+  101349 requests in 10.04s, 14.88MB read
+  Socket errors: connect 0, read 0, write 0, timeout 190
+  Non-2xx or 3xx responses: 101349
+Requests/sec:  10094.33
+Transfer/sec:      1.48MB
 
-➜  bench git:(main) ✗ wrk http://127.0.0.1:8081/peewee -c 1000 -t 6 -s wrk.lua
-Running 10s test @ http://127.0.0.1:8081/peewee
+Running 10s test @ http://127.0.0.1:8081/
   6 threads and 1000 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     1.31s   277.39ms   1.62s    84.01%
-    Req/Sec   125.56     60.65   383.00     73.08%
-  7098 requests in 10.05s, 1.18MB read
-  Socket errors: connect 0, read 7098, write 0, timeout 0
-  Non-2xx or 3xx responses: 7098
-Requests/sec:    706.23
-Transfer/sec:    120.00KB
+    Latency    40.96ms   83.35ms   1.99s    98.88%
+    Req/Sec     1.43k   349.58     2.67k    71.19%
+  85034 requests in 10.03s, 12.49MB read
+  Socket errors: connect 0, read 0, write 0, timeout 220
+  Non-2xx or 3xx responses: 85034
+Requests/sec:   8474.90
+Transfer/sec:      1.24MB
 ```
