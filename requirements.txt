@@ -8,3 +8,4 @@ asyncpg
 uvicorn
 psycopg2-binary
 aiopg
+pypika

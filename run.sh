@@ -17,9 +17,9 @@ function bench {
 }
 
 bench "Asyncpg" asyncpg
-bench 'SQLA + asyncpg' sqla-asyncpg
-bench 'SQLA + psycopg2' sqla-psycopg2
-bench 'SQLA + psycopg2' sqla-psycopg2
+bench "Pypika + asyncpg" pypika-asyncpg
+bench 'SQLAlchemy + asyncpg' sqla-asyncpg
+bench 'SQLAlchemy + psycopg2' sqla-psycopg2
 bench 'Piccolo' piccolo
 bench 'Peewee no pool' peewee-no-pool
 bench 'Peewee'

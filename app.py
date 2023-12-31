@@ -3,6 +3,7 @@ from typing import List
 
 import asyncpg
 import peewee
+import pypika
 import sqlalchemy as sa
 from fastapi import Depends, FastAPI, Form
 from fastapi_asyncpg import configure_asyncpg
@@ -87,6 +88,16 @@ asyncpgdb = configure_asyncpg(
     init_db=phony,
 )
 
+# Pypika -------------------------------------------------------------------------------
+
+
+class TaskPypika:
+    Table = pypika.Table("task")
+    id = Table.id
+    name = Table.name
+    completed = Table.completed
+
+
 # --------------------------------------------------------------------------------------
 
 
@@ -100,6 +111,32 @@ class TaskDTO(BaseModel):
 async def startup():
     peeweedb.create_tables([TaskPeewee])
     await piccolodb.start_connection_pool(max_size=20)
+
+
+@app.get("/asyncpg", response_model=List[TaskDTO])
+async def list_asyncpg(db=Depends(asyncpgdb.atomic)):
+    result = await db.fetch("SELECT * FROM task")
+    return [dict(row) for row in result]
+
+
+@app.get("/asyncpg/{id}", response_model=TaskDTO)
+async def get_asyncpg(id: int, db=Depends(asyncpgdb.atomic)):
+    result = await db.fetch("SELECT * FROM task WHERE id = $1", id)
+    return dict(result[0])
+
+
+@app.get("/pypika-asyncpg", response_model=List[TaskDTO])
+async def list_pypika_asyncpg(db=Depends(asyncpgdb.atomic)):
+    q = pypika.Query.from_(TaskPypika.Table).select("*")
+    result = await db.fetch(q.get_sql())
+    return [dict(row) for row in result]
+
+
+@app.get("/pypika-asyncpg/{id}", response_model=TaskDTO)
+async def get_pypika_asyncpg(id: int, db=Depends(asyncpgdb.atomic)):
+    q = pypika.Query.from_(TaskPypika.Table).select("*").where(TaskPypika.id == id)
+    result = await db.fetch(q.get_sql())
+    return dict(result[0])
 
 
 @app.get("/sqla-asyncpg", response_model=List[TaskDTO])
@@ -158,18 +195,6 @@ async def get_piccolo(id: int):
     async with piccolodb.transaction():
         result = await TaskPiccolo.select().where(TaskPiccolo.id == id).first().run()
         return result
-
-
-@app.get("/asyncpg", response_model=List[TaskDTO])
-async def list_asyncpg(db=Depends(asyncpgdb.atomic)):
-    result = await db.fetch("SELECT * FROM task")
-    return [dict(row) for row in result]
-
-
-@app.get("/asyncpg/{id}", response_model=TaskDTO)
-async def get_asyncpg(id: int, db=Depends(asyncpgdb.atomic)):
-    result = await db.fetch("SELECT * FROM task WHERE id = $1", id)
-    return dict(result[0])
 
 
 @app.get("/peewee-no-pool", response_model=List[TaskDTO])
