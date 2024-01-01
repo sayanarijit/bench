@@ -93,9 +93,9 @@ asyncpgdb = configure_asyncpg(
 
 class TaskPypika:
     Table = pypika.Table("task")
-    id: pypika.Column = Table.id
-    name: pypika.Column = Table.name
-    completed: pypika.Column = Table.completed
+    id: pypika.Field = Table.id
+    name: pypika.Field = Table.name
+    completed: pypika.Field = Table.completed
 
 
 # --------------------------------------------------------------------------------------
@@ -127,14 +127,14 @@ async def get_asyncpg(id: int, db=Depends(asyncpgdb.atomic)):
 
 @app.get("/pypika-asyncpg", response_model=List[TaskDTO])
 async def list_pypika_asyncpg(db=Depends(asyncpgdb.atomic)):
-    q = pypika.Query.from_(TaskPypika.Table).select("*")
+    q = TaskPypika.Table.select("*")
     result = await db.fetch(str(q))
     return [dict(row) for row in result]
 
 
 @app.get("/pypika-asyncpg/{id}", response_model=TaskDTO)
 async def get_pypika_asyncpg(id: int, db=Depends(asyncpgdb.atomic)):
-    q = pypika.Query.from_(TaskPypika.Table).select("*").where(TaskPypika.id == id)
+    q = TaskPypika.Table.select("*").where(TaskPypika.id == id)
     result = await db.fetch(str(q))
     return dict(result[0])
 
