@@ -18,8 +18,10 @@ function bench {
 
 bench "Asyncpg" asyncpg
 bench "Pypika + asyncpg" pypika-asyncpg
+bench "Pypika + aiopg" pypika-aiopg
+bench "Pypika + psycopg2" pypika-psycopg2
+bench 'Piccolo' piccolo
 bench 'SQLAlchemy + asyncpg' sqla-asyncpg
 bench 'SQLAlchemy + psycopg2' sqla-psycopg2
-bench 'Piccolo' piccolo
 bench 'Peewee no pool' peewee-no-pool
 bench 'Peewee'

@@ -1,5 +1,6 @@
 from typing import List
 
+import aiopg
 import peewee
 import pypika
 import sqlalchemy as sa
@@ -8,12 +9,15 @@ from fastapi_asyncpg import configure_asyncpg
 from piccolo import columns as picols
 from piccolo.table import Table as PiccoloTable
 from playhouse.pool import PooledPostgresqlExtDatabase
+from psycopg2.pool import ThreadedConnectionPool
 from pydantic import BaseModel
 from pypika.dialects import PostgreSQLQuery as Query
 from sqla_fancy_core import TableFactory
 from sqlalchemy.ext.asyncio import create_async_engine
 
 import piccolo_conf
+
+MAX_CONN = 20
 
 # Peewee -------------------------------------------------------------------------------
 peewee_state_default = {"closed": None, "conn": None, "ctx": None, "transactions": None}
@@ -23,7 +27,7 @@ peeweedb = PooledPostgresqlExtDatabase(
     password="dev",
     host="localhost",
     port=5432,
-    max_connections=20,
+    max_connections=MAX_CONN,
 )
 peewee_no_pool_db = peewee.PostgresqlDatabase(
     "postgres", user="dev", password="dev", host="localhost", port=5432
@@ -49,12 +53,16 @@ def peewee_transaction():
 
 tf = TableFactory()
 sqla_psycopg2_engine = sa.create_engine(
-    "postgresql+psycopg2://dev:dev@localhost/postgres", pool_size=20, max_overflow=0
+    "postgresql+psycopg2://dev:dev@localhost/postgres",
+    pool_size=MAX_CONN,
+    max_overflow=0,
 )
 
 
 sqla_asyncpg_engine = create_async_engine(
-    "postgresql+asyncpg://dev:dev@localhost/postgres", pool_size=20, max_overflow=0
+    "postgresql+asyncpg://dev:dev@localhost/postgres",
+    pool_size=MAX_CONN,
+    max_overflow=0,
 )
 
 
@@ -103,7 +111,7 @@ app = FastAPI()
 asyncpgdb = configure_asyncpg(
     app,
     "postgresql://dev:dev@localhost/postgres",
-    max_size=20,
+    max_size=MAX_CONN,
     init_db=phony,
 )
 
@@ -115,6 +123,32 @@ class TaskPypika:
     id: pypika.Field = Table.field("id")
     name: pypika.Field = Table.field("name")
     completed: pypika.Field = Table.field("completed")
+
+
+pypika_psycopg_pool = ThreadedConnectionPool(
+    1, 20, user="dev", password="dev", host="localhost", port=5432, database="postgres"
+)
+
+
+def pypika_psycopg2_transaction():
+    conn = pypika_psycopg_pool.getconn()
+    cursor = conn.cursor()
+    try:
+        yield cursor
+        conn.commit()
+    except:
+        conn.rollback()
+        raise
+    finally:
+        pypika_psycopg_pool.putconn(conn)
+
+
+async def pypika_aio_transaction():
+    pool: aiopg.Pool = app.state.pypika_aio_pool
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            async with cursor.begin():
+                yield cursor
 
 
 # --------------------------------------------------------------------------------------
@@ -129,7 +163,19 @@ class TaskDTO(BaseModel):
 @app.on_event("startup")
 async def startup():
     peeweedb.create_tables([TaskPeewee])
-    await piccolodb.start_connection_pool(max_size=20)
+    await piccolodb.start_connection_pool(max_size=MAX_CONN)
+    app.state.pypika_aio_pool = await aiopg.Pool.from_pool_fill(
+        dsn="postgresql://dev:dev@localhost/postgres",
+        minsize=1,
+        maxsize=MAX_CONN,
+        timeout=60,
+        enable_json=True,
+        enable_hstore=True,
+        enable_uuid=True,
+        echo=False,
+        on_connect=None,
+        pool_recycle=-1.0,
+    )
 
 
 @app.get("/asyncpg", response_model=List[TaskDTO])
@@ -156,6 +202,60 @@ async def get_pypika_asyncpg(id: int, db=Depends(asyncpgdb.atomic)):
     q = Query.from_(TaskPypika.Table).select("*").where(TaskPypika.id == id)
     result = await db.fetch(str(q))
     return dict(result[0])
+
+
+@app.get("/pypika-psycopg2", response_model=List[TaskDTO])
+def list_pypika_psycopg2(
+    conn=Depends(pypika_psycopg2_transaction),
+):
+    q = Query.from_(TaskPypika.Table).select(
+        TaskPypika.id, TaskPypika.name, TaskPypika.completed
+    )
+    result = conn.execute(str(q))
+    result = conn.fetchall()
+    return [
+        TaskDTO(id=id, name=name, completed=completed) for id, name, completed in result
+    ]
+
+
+@app.get("/pypika-psycopg2/{id}", response_model=TaskDTO)
+def get_pypika_psycopg2(id: int, conn=Depends(pypika_psycopg2_transaction)):
+    q = (
+        Query.from_(TaskPypika.Table)
+        .select(TaskPypika.id, TaskPypika.name, TaskPypika.completed)
+        .where(TaskPypika.id == id)
+    )
+    conn.execute(str(q))
+    id, name, completed = conn.fetchone()
+    return TaskDTO(id=id, name=name, completed=completed)
+
+
+@app.get("/pypika-aiopg", response_model=List[TaskDTO])
+async def list_pypika_aiopg(
+    conn: aiopg.Cursor = Depends(pypika_aio_transaction),
+):
+    q = Query.from_(TaskPypika.Table).select(
+        TaskPypika.id, TaskPypika.name, TaskPypika.completed
+    )
+    await conn.execute(str(q))
+    result = await conn.fetchall()
+    return [
+        TaskDTO(id=id, name=name, completed=completed) for id, name, completed in result
+    ]
+
+
+@app.get("/pypika-aiopg/{id}", response_model=TaskDTO)
+async def get_pypika_aiopg(
+    id: int, conn: aiopg.Cursor = Depends(pypika_aio_transaction)
+):
+    q = (
+        Query.from_(TaskPypika.Table)
+        .select(TaskPypika.id, TaskPypika.name, TaskPypika.completed)
+        .where(TaskPypika.id == id)
+    )
+    await conn.execute(str(q))
+    id, name, completed = await conn.fetchone()
+    return TaskDTO(id=id, name=name, completed=completed)
 
 
 @app.get("/sqla-asyncpg", response_model=List[TaskDTO])
