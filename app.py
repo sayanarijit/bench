@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from typing import List
 
-import asyncpg
 import peewee
 import pypika
 import sqlalchemy as sa
@@ -11,6 +10,7 @@ from piccolo import columns as picols
 from piccolo.table import Table as PiccoloTable
 from playhouse.pool import PooledPostgresqlExtDatabase
 from pydantic import BaseModel
+from pypika.dialects import PostgreSQLQuery as Query
 from sqla_fancy_core import TableFactory
 from sqlalchemy.ext.asyncio import create_async_engine
 
@@ -93,9 +93,9 @@ asyncpgdb = configure_asyncpg(
 
 class TaskPypika:
     Table = pypika.Table("task")
-    id: pypika.Field = Table.id
-    name: pypika.Field = Table.name
-    completed: pypika.Field = Table.completed
+    id: pypika.Field = Table.field("id")
+    name: pypika.Field = Table.field("name")
+    completed: pypika.Field = Table.field("completed")
 
 
 # --------------------------------------------------------------------------------------
@@ -127,14 +127,14 @@ async def get_asyncpg(id: int, db=Depends(asyncpgdb.atomic)):
 
 @app.get("/pypika-asyncpg", response_model=List[TaskDTO])
 async def list_pypika_asyncpg(db=Depends(asyncpgdb.atomic)):
-    q = TaskPypika.Table.select("*")
+    q = Query.from_(TaskPypika.Table).select("*")
     result = await db.fetch(str(q))
     return [dict(row) for row in result]
 
 
 @app.get("/pypika-asyncpg/{id}", response_model=TaskDTO)
 async def get_pypika_asyncpg(id: int, db=Depends(asyncpgdb.atomic)):
-    q = TaskPypika.Table.select("*").where(TaskPypika.id == id)
+    q = Query.from_(TaskPypika.Table).select("*").where(TaskPypika.id == id)
     result = await db.fetch(str(q))
     return dict(result[0])
 
@@ -212,6 +212,32 @@ def get_peewee_no_pool(id: int):
 
 
 # Test atomicity -----------------------------------------------------------------------
+
+
+@app.post("/pypika-asyncpg", response_model=int)
+async def create_pypika_asyncpg(
+    name: str = Form(...), db=Depends(asyncpgdb.atomic)
+) -> int:
+    q = (
+        Query.into(TaskPypika.Table)
+        .columns(TaskPypika.name, TaskPypika.completed)
+        .insert(name, True)
+        .returning(TaskPypika.id)
+    )
+
+    result = await db.fetch(str(q))
+
+    # assert False
+
+    q = (
+        Query.into(TaskPypika.Table)
+        .columns(TaskPypika.name, TaskPypika.completed)
+        .insert(str(result[0][TaskPypika.id.name]), True)
+        .returning(TaskPypika.id)
+    )
+
+    result = await db.fetch(str(q))
+    return result[0][TaskPypika.id.name]
 
 
 @app.post("/sqla-asyncpg", response_model=int)
