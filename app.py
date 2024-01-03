@@ -20,7 +20,6 @@ import piccolo_conf
 MAX_CONN = 20
 
 # Peewee -------------------------------------------------------------------------------
-peewee_state_default = {"closed": None, "conn": None, "ctx": None, "transactions": None}
 peeweedb = PooledPostgresqlExtDatabase(
     "postgres",
     user="dev",
@@ -44,8 +43,23 @@ class TaskPeewee(peewee.Model):
         table_name = "task"
 
 
+class TaskPeeweeNoPool(peewee.Model):
+    id = peewee.AutoField(primary_key=True)
+    name = peewee.CharField()
+    completed = peewee.BooleanField()
+
+    class Meta:
+        database = peewee_no_pool_db
+        table_name = "task"
+
+
 def peewee_transaction():
     with peeweedb.atomic():
+        yield
+
+
+def peewee_no_pool_transaction():
+    with peewee_no_pool_db.atomic():
         yield
 
 
@@ -308,14 +322,14 @@ async def get_piccolo(id: int, _=Depends(piccolo_transaction)):
 
 
 @app.get("/peewee-no-pool", response_model=List[TaskDTO])
-def list_peewee_no_pool(_=Depends(peewee_transaction)):
-    result = TaskPeewee.select().dicts()
+def list_peewee_no_pool(_=Depends(peewee_no_pool_transaction)):
+    result = TaskPeeweeNoPool.select().dicts()
     return result
 
 
 @app.get("/peewee-no-pool/{id}", response_model=TaskDTO)
-def get_peewee_no_pool(id: int, _=Depends(peewee_transaction)):
-    result = TaskPeewee.select().where(TaskPeewee.id == id).dicts()
+def get_peewee_no_pool(id: int, _=Depends(peewee_no_pool_transaction)):
+    result = TaskPeeweeNoPool.select().where(TaskPeeweeNoPool.id == id).dicts()
     return result[0]
 
 
