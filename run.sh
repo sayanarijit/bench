@@ -18,8 +18,9 @@ function bench {
 
 bench "Asyncpg" asyncpg
 bench "Pypika + asyncpg" pypika-asyncpg
-bench "Pypika + aiopg" pypika-aiopg
-bench "Pypika + psycopg2" pypika-psycopg2
+bench "Pgmini + asyncpg" pgmini-aiopg
+bench "Pgmini + aiopg" pgmini-aiopg
+bench "Pgmini + psycopg2" pgmini-psycopg2
 bench 'Piccolo' piccolo
 bench 'SQLAlchemy + asyncpg' sqla-asyncpg
 bench 'SQLAlchemy + psycopg2' sqla-psycopg2

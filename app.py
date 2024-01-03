@@ -2,6 +2,7 @@ from typing import List
 
 import aiopg
 import peewee
+import pgmini
 import pypika
 import sqlalchemy as sa
 from fastapi import Depends, FastAPI, Form
@@ -139,13 +140,13 @@ class TaskPypika:
     completed: pypika.Field = Table.field("completed")
 
 
-pypika_psycopg_pool = ThreadedConnectionPool(
+psycopg2_pool = ThreadedConnectionPool(
     1, 20, user="dev", password="dev", host="localhost", port=5432, database="postgres"
 )
 
 
-def pypika_psycopg2_transaction():
-    conn = pypika_psycopg_pool.getconn()
+def psycopg2_transaction():
+    conn = psycopg2_pool.getconn()
     cursor = conn.cursor()
     try:
         yield cursor
@@ -154,15 +155,25 @@ def pypika_psycopg2_transaction():
         conn.rollback()
         raise
     finally:
-        pypika_psycopg_pool.putconn(conn)
+        psycopg2_pool.putconn(conn)
 
 
-async def pypika_aio_transaction():
-    pool: aiopg.Pool = app.state.pypika_aio_pool
+async def aiopg_transaction():
+    pool: aiopg.Pool = app.state.aiopgpool
     async with pool.acquire() as conn:
         async with conn.cursor() as cursor:
             async with cursor.begin():
                 yield cursor
+
+
+# Pgmini -------------------------------------------------------------------------------
+
+
+class TaskPgmini:
+    Table = pgmini.Table("task")
+    id = Table.id
+    name = Table.name
+    completed = Table.completed
 
 
 # --------------------------------------------------------------------------------------
@@ -178,7 +189,7 @@ class TaskDTO(BaseModel):
 async def startup():
     peeweedb.create_tables([TaskPeewee])
     await piccolodb.start_connection_pool(max_size=MAX_CONN)
-    app.state.pypika_aio_pool = await aiopg.Pool.from_pool_fill(
+    app.state.aiopgpool = await aiopg.Pool.from_pool_fill(
         dsn="postgresql://dev:dev@localhost/postgres",
         minsize=1,
         maxsize=MAX_CONN,
@@ -213,63 +224,88 @@ async def list_pypika_asyncpg(db=Depends(asyncpgdb.atomic)):
 
 @app.get("/pypika-asyncpg/{id}", response_model=TaskDTO)
 async def get_pypika_asyncpg(id: int, db=Depends(asyncpgdb.atomic)):
-    q = Query.from_(TaskPypika.Table).select("*").where(TaskPypika.id == id)
-    result = await db.fetch(str(q))
+    q = (
+        Query.from_(TaskPypika.Table)
+        .select("*")
+        .where(TaskPypika.id == pypika.Parameter("$1"))
+    )
+    result = await db.fetch(str(q), id)
     return dict(result[0])
 
 
-@app.get("/pypika-psycopg2", response_model=List[TaskDTO])
-def list_pypika_psycopg2(
-    conn=Depends(pypika_psycopg2_transaction),
-):
-    q = Query.from_(TaskPypika.Table).select(
-        TaskPypika.id, TaskPypika.name, TaskPypika.completed
+@app.get("/pgmini-asyncpg", response_model=List[TaskDTO])
+async def list_pgmini_asyncpg(db=Depends(asyncpgdb.atomic)):
+    sql = pgmini.Select(TaskPgmini.Table.STAR).From(TaskPgmini.Table)
+    q, values = pgmini.build(sql, driver="asyncpg")
+
+    result = await db.fetch(q, *values)
+    return [dict(row) for row in result]
+
+
+@app.get("/pgmini-asyncpg/{id}", response_model=TaskDTO)
+async def get_pgmini_asyncpg(id: int, db=Depends(asyncpgdb.atomic)):
+    sql = (
+        pgmini.Select(TaskPgmini.Table.STAR)
+        .From(TaskPgmini.Table)
+        .Where(TaskPgmini.Table.id == id)
     )
-    result = conn.execute(str(q))
-    result = conn.fetchall()
+    q, values = pgmini.build(sql, driver="asyncpg")
+    result = await db.fetch(str(q), *values)
+    return dict(result[0])
+
+
+@app.get("/pgmini-aiopg", response_model=List[TaskDTO])
+async def list_pgmini_aiopg(cursor: aiopg.Cursor = Depends(aiopg_transaction)):
+    sql = pgmini.Select(TaskPgmini.id, TaskPgmini.name, TaskPgmini.completed).From(
+        TaskPgmini.Table
+    )
+    q, values = pgmini.build(sql, driver="psycopg")
+
+    await cursor.execute(q, values)
+    result = await cursor.fetchall()
     return [
-        TaskDTO(id=id, name=name, completed=completed) for id, name, completed in result
+        dict(id=id, name=name, completed=completed) for id, name, completed in result
     ]
 
 
-@app.get("/pypika-psycopg2/{id}", response_model=TaskDTO)
-def get_pypika_psycopg2(id: int, conn=Depends(pypika_psycopg2_transaction)):
-    q = (
-        Query.from_(TaskPypika.Table)
-        .select(TaskPypika.id, TaskPypika.name, TaskPypika.completed)
-        .where(TaskPypika.id == id)
+@app.get("/pgmini-aiopg/{id}", response_model=TaskDTO)
+async def get_pgmini_aiopg(id: int, cursor: aiopg.Cursor = Depends(aiopg_transaction)):
+    sql = (
+        pgmini.Select(TaskPgmini.id, TaskPgmini.name, TaskPgmini.completed)
+        .From(TaskPgmini.Table)
+        .Where(TaskPgmini.Table.id == id)
     )
-    conn.execute(str(q))
-    id, name, completed = conn.fetchone()
-    return TaskDTO(id=id, name=name, completed=completed)
+    q, values = pgmini.build(sql, driver="psycopg")
+    await cursor.execute(q, values)
+    id, name, completed = await cursor.fetchone()
+    return dict(id=id, name=name, completed=completed)
 
 
-@app.get("/pypika-aiopg", response_model=List[TaskDTO])
-async def list_pypika_aiopg(
-    conn: aiopg.Cursor = Depends(pypika_aio_transaction),
-):
-    q = Query.from_(TaskPypika.Table).select(
-        TaskPypika.id, TaskPypika.name, TaskPypika.completed
+@app.get("/pgmini-psycopg2", response_model=List[TaskDTO])
+def list_pgmini_psycopg2(cursor=Depends(psycopg2_transaction)):
+    sql = pgmini.Select(TaskPgmini.id, TaskPgmini.name, TaskPgmini.completed).From(
+        TaskPgmini.Table
     )
-    await conn.execute(str(q))
-    result = await conn.fetchall()
+    q, values = pgmini.build(sql, driver="psycopg")
+
+    cursor.execute(q, values)
+    result = cursor.fetchall()
     return [
-        TaskDTO(id=id, name=name, completed=completed) for id, name, completed in result
+        dict(id=id, name=name, completed=completed) for id, name, completed in result
     ]
 
 
-@app.get("/pypika-aiopg/{id}", response_model=TaskDTO)
-async def get_pypika_aiopg(
-    id: int, conn: aiopg.Cursor = Depends(pypika_aio_transaction)
-):
-    q = (
-        Query.from_(TaskPypika.Table)
-        .select(TaskPypika.id, TaskPypika.name, TaskPypika.completed)
-        .where(TaskPypika.id == id)
+@app.get("/pgmini-psycopg2/{id}", response_model=TaskDTO)
+def get_pgmini_psycopg2(id: int, cursor=Depends(psycopg2_transaction)):
+    sql = (
+        pgmini.Select(TaskPgmini.id, TaskPgmini.name, TaskPgmini.completed)
+        .From(TaskPgmini.Table)
+        .Where(TaskPgmini.Table.id == id)
     )
-    await conn.execute(str(q))
-    id, name, completed = await conn.fetchone()
-    return TaskDTO(id=id, name=name, completed=completed)
+    q, values = pgmini.build(sql, driver="psycopg")
+    cursor.execute(q, values)
+    id, name, completed = cursor.fetchone()
+    return dict(id=id, name=name, completed=completed)
 
 
 @app.get("/sqla-asyncpg", response_model=List[TaskDTO])

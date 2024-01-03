@@ -9,3 +9,4 @@ uvicorn
 psycopg2-binary
 aiopg
 pypika
+pgmini
