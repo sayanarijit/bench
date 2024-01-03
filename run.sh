@@ -8,9 +8,9 @@ function bench {
   echo "### $1"
   echo
   echo '```'
-  wrk http://127.0.0.1:8081/$2 -c 1000 -t 6
+  wrk http://127.0.0.1:8081/$2
   echo
-  wrk http://127.0.0.1:8081/$2 -c 1000 -t 6 -s wrk.lua
+  wrk http://127.0.0.1:8081/$2 -s wrk.lua
   echo '```'
   echo
   kill $pid &> /dev/null
