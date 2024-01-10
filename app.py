@@ -9,6 +9,7 @@ import pgmini
 import pypika
 import sqlalchemy as sa
 from fastapi import Depends, FastAPI, Form
+from fastapi.responses import ORJSONResponse
 from fastapi_asyncpg import configure_asyncpg
 from piccolo import columns as picols
 from piccolo.table import Table as PiccoloTable
@@ -125,7 +126,7 @@ async def phony(_):
     pass
 
 
-app = FastAPI()
+app = FastAPI(default_response_class=ORJSONResponse)
 asyncpgdb = configure_asyncpg(
     app,
     "postgresql://dev:dev@localhost/postgres",
