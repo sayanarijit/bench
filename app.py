@@ -482,12 +482,22 @@ resp = [
 ]
 
 
-@app.get("/dict")
+@app.get("/no-resp-model")
+async def list_no_model():
+    return resp
+
+
+@app.get("/no-resp-model/{id}")
+async def get_no_model(id: int):
+    return resp[id]
+
+
+@app.get("/dict", response_model=list[dict])
 async def list_dict():
     return resp
 
 
-@app.get("/dict/{id}")
+@app.get("/dict/{id}", response_model=dict)
 async def get_dict(id: int):
     return resp[id]
 

@@ -16,6 +16,7 @@ function bench {
   kill $pid &> /dev/null
 }
 
+bench 'No Response Model' no-resp-model
 bench 'Dict' dict
 bench 'Dataclass' dataclass
 bench 'Pydantic' pydantic
