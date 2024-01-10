@@ -16,6 +16,9 @@ function bench {
   kill $pid &> /dev/null
 }
 
+bench 'Dict' dict
+bench 'Dataclass' dataclass
+bench 'Pydantic' pydantic
 bench "Asyncpg" asyncpg
 bench "Pypika + asyncpg" pypika-asyncpg
 bench "Pgmini + asyncpg" pgmini-aiopg
@@ -25,4 +28,4 @@ bench 'Piccolo' piccolo
 bench 'SQLAlchemy + asyncpg' sqla-asyncpg
 bench 'SQLAlchemy + psycopg2' sqla-psycopg2
 bench 'Peewee no pool' peewee-no-pool
-bench 'Peewee'
+bench 'Peewee' peewee

@@ -1,24 +1,95 @@
+
+### Dict
+
+```
+Running 10s test @ http://127.0.0.1:8081/dict
+  2 threads and 10 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     5.91ms  237.91us  20.38ms   97.23%
+    Req/Sec   845.96     14.48     0.87k    74.50%
+  16844 requests in 10.01s, 39.81MB read
+Requests/sec:   1683.18
+Transfer/sec:      3.98MB
+
+Running 10s test @ http://127.0.0.1:8081/dict
+  2 threads and 10 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     1.44ms  109.57us   3.73ms   90.37%
+    Req/Sec     3.39k    27.49     3.46k    71.00%
+  67551 requests in 10.00s, 13.03MB read
+Requests/sec:   6753.85
+Transfer/sec:      1.30MB
+```
+
+
+### Dataclass
+
+```
+Running 10s test @ http://127.0.0.1:8081/dataclass
+  2 threads and 10 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     2.83ms  200.49us  10.64ms   90.27%
+    Req/Sec     1.76k    16.60     1.80k    79.50%
+  34957 requests in 10.00s, 82.61MB read
+Requests/sec:   3494.88
+Transfer/sec:      8.26MB
+
+Running 10s test @ http://127.0.0.1:8081/dataclass
+  2 threads and 10 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     1.42ms  129.37us   6.65ms   90.33%
+    Req/Sec     3.46k    36.26     3.55k    72.00%
+  68884 requests in 10.00s, 13.29MB read
+Requests/sec:   6885.81
+Transfer/sec:      1.33MB
+```
+
+
+### Pydantic
+
+```
+Running 10s test @ http://127.0.0.1:8081/pydantic
+  2 threads and 10 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     2.88ms  175.38us  11.95ms   91.68%
+    Req/Sec     1.73k    18.34     1.77k    64.00%
+  34446 requests in 10.01s, 81.40MB read
+Requests/sec:   3442.47
+Transfer/sec:      8.14MB
+
+Running 10s test @ http://127.0.0.1:8081/pydantic
+  2 threads and 10 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     1.43ms  122.97us   7.25ms   90.90%
+    Req/Sec     3.42k    39.45     3.51k    71.50%
+  68044 requests in 10.00s, 13.13MB read
+Requests/sec:   6803.35
+Transfer/sec:      1.31MB
+```
+
+
 ### Asyncpg
 
 ```
 Running 10s test @ http://127.0.0.1:8081/asyncpg
   2 threads and 10 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     5.27ms    7.98ms 138.20ms   97.93%
-    Req/Sec     1.14k   169.97     1.26k    97.00%
-  22715 requests in 10.00s, 24.72MB read
-Requests/sec:   2270.42
-Transfer/sec:      2.47MB
+    Latency     4.78ms    2.71ms  38.93ms   98.40%
+    Req/Sec     1.11k    83.27     1.19k    93.50%
+  22017 requests in 10.00s, 25.62MB read
+Requests/sec:   2201.00
+Transfer/sec:      2.56MB
 
 Running 10s test @ http://127.0.0.1:8081/asyncpg
   2 threads and 10 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     3.90ms  364.28us   6.22ms   69.31%
-    Req/Sec     1.28k    42.02     1.42k    66.50%
-  25556 requests in 10.01s, 3.97MB read
-Requests/sec:   2554.27
-Transfer/sec:    406.49KB
+    Latency     3.80ms  266.98us   8.07ms   70.80%
+    Req/Sec     1.32k    36.08     1.43k    70.50%
+  26302 requests in 10.00s, 4.09MB read
+Requests/sec:   2629.81
+Transfer/sec:    418.51KB
 ```
+
 
 ### Pypika + asyncpg
 
@@ -26,21 +97,22 @@ Transfer/sec:    406.49KB
 Running 10s test @ http://127.0.0.1:8081/pypika-asyncpg
   2 threads and 10 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     5.97ms    7.63ms 140.95ms   97.89%
-    Req/Sec     0.97k   138.89     1.05k    96.00%
-  19279 requests in 10.01s, 20.98MB read
-Requests/sec:   1926.43
-Transfer/sec:      2.10MB
+    Latency     5.54ms    2.14ms  39.37ms   99.01%
+    Req/Sec     0.93k    49.42     1.01k    85.50%
+  18502 requests in 10.00s, 21.53MB read
+Requests/sec:   1849.45
+Transfer/sec:      2.15MB
 
 Running 10s test @ http://127.0.0.1:8081/pypika-asyncpg
   2 threads and 10 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     5.18ms  452.34us   9.97ms   68.55%
-    Req/Sec     0.97k    21.17     1.03k    67.50%
-  19260 requests in 10.00s, 2.99MB read
-Requests/sec:   1925.42
-Transfer/sec:    306.41KB
+    Latency     5.05ms  354.06us   9.90ms   70.40%
+    Req/Sec     0.99k    36.78     1.11k    72.00%
+  19784 requests in 10.00s, 3.07MB read
+Requests/sec:   1977.55
+Transfer/sec:    314.71KB
 ```
+
 
 ### Pgmini + asyncpg
 
@@ -48,21 +120,22 @@ Transfer/sec:    306.41KB
 Running 10s test @ http://127.0.0.1:8081/pgmini-aiopg
   2 threads and 10 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     5.78ms    1.60ms  41.91ms   99.14%
-    Req/Sec     0.88k    61.02     0.98k    92.00%
-  17524 requests in 10.01s, 19.07MB read
-Requests/sec:   1750.81
-Transfer/sec:      1.91MB
+    Latency     5.94ms    1.69ms  40.58ms   99.21%
+    Req/Sec     0.86k    59.16     0.91k    95.00%
+  17058 requests in 10.01s, 19.85MB read
+Requests/sec:   1704.93
+Transfer/sec:      1.98MB
 
 Running 10s test @ http://127.0.0.1:8081/pgmini-aiopg
   2 threads and 10 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     5.99ms    1.35ms  39.89ms   99.43%
-    Req/Sec   844.61     50.08     0.96k    71.50%
-  16812 requests in 10.00s, 2.61MB read
-Requests/sec:   1680.88
-Transfer/sec:    267.50KB
+    Latency     6.13ms    1.41ms  40.47ms   99.44%
+    Req/Sec   825.21     38.46     0.88k    87.50%
+  16431 requests in 10.00s, 2.55MB read
+Requests/sec:   1642.64
+Transfer/sec:    261.41KB
 ```
+
 
 ### Pgmini + aiopg
 
@@ -70,21 +143,22 @@ Transfer/sec:    267.50KB
 Running 10s test @ http://127.0.0.1:8081/pgmini-aiopg
   2 threads and 10 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     6.01ms    1.55ms  39.51ms   99.06%
-    Req/Sec   845.97     54.26     0.92k    97.50%
-  16842 requests in 10.01s, 18.33MB read
-Requests/sec:   1683.32
-Transfer/sec:      1.83MB
+    Latency     6.12ms  435.47us  15.79ms   83.77%
+    Req/Sec   820.56     32.27     0.90k    72.00%
+  16343 requests in 10.01s, 19.01MB read
+Requests/sec:   1633.18
+Transfer/sec:      1.90MB
 
 Running 10s test @ http://127.0.0.1:8081/pgmini-aiopg
   2 threads and 10 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     5.62ms    1.33ms  39.98ms   99.58%
-    Req/Sec     0.90k    44.44     1.00k    71.50%
-  17907 requests in 10.01s, 2.78MB read
-Requests/sec:   1789.79
-Transfer/sec:    284.83KB
+    Latency     5.65ms    1.35ms  40.03ms   99.40%
+    Req/Sec     0.89k    54.43     1.02k    79.00%
+  17804 requests in 10.01s, 2.77MB read
+Requests/sec:   1779.23
+Transfer/sec:    283.15KB
 ```
+
 
 ### Pgmini + psycopg2
 
@@ -92,21 +166,22 @@ Transfer/sec:    284.83KB
 Running 10s test @ http://127.0.0.1:8081/pgmini-psycopg2
   2 threads and 10 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency    28.33ms    8.27ms  74.04ms   66.38%
-    Req/Sec   176.89     25.10   262.00     67.50%
-  3527 requests in 10.01s, 3.84MB read
-Requests/sec:    352.44
-Transfer/sec:    392.71KB
+    Latency    54.63ms    8.60ms 109.00ms   72.59%
+    Req/Sec    91.52     10.65   121.00     77.00%
+  1828 requests in 10.01s, 2.13MB read
+Requests/sec:    182.63
+Transfer/sec:    217.59KB
 
 Running 10s test @ http://127.0.0.1:8081/pgmini-psycopg2
   2 threads and 10 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency    30.51ms    8.03ms  81.43ms   64.43%
-    Req/Sec   163.98     19.16   220.00     77.50%
-  3271 requests in 10.01s, 520.54KB read
-Requests/sec:    326.92
-Transfer/sec:     52.03KB
+    Latency    55.44ms    9.91ms 161.93ms   78.25%
+    Req/Sec    90.37     10.71   111.00     95.48%
+  1799 requests in 10.01s, 286.29KB read
+Requests/sec:    179.69
+Transfer/sec:     28.60KB
 ```
+
 
 ### Piccolo
 
@@ -114,21 +189,22 @@ Transfer/sec:     52.03KB
 Running 10s test @ http://127.0.0.1:8081/piccolo
   2 threads and 10 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     6.64ms    8.67ms 143.60ms   97.66%
-    Req/Sec     0.89k   134.66     0.97k    96.00%
-  17647 requests in 10.00s, 19.20MB read
-Requests/sec:   1763.84
-Transfer/sec:      1.92MB
+    Latency     6.35ms    2.32ms  41.54ms   98.83%
+    Req/Sec   809.53     49.33     0.87k    91.50%
+  16116 requests in 10.00s, 18.75MB read
+Requests/sec:   1610.90
+Transfer/sec:      1.87MB
 
 Running 10s test @ http://127.0.0.1:8081/piccolo
   2 threads and 10 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     5.58ms    1.36ms  39.03ms   98.52%
-    Req/Sec     0.91k    40.74     0.99k    85.00%
-  18024 requests in 10.00s, 2.80MB read
-Requests/sec:   1801.74
-Transfer/sec:    286.73KB
+    Latency     5.76ms  391.03us  12.16ms   69.76%
+    Req/Sec     0.87k    29.23     0.94k    71.00%
+  17338 requests in 10.00s, 2.69MB read
+Requests/sec:   1733.38
+Transfer/sec:    275.85KB
 ```
+
 
 ### SQLAlchemy + asyncpg
 
@@ -136,21 +212,22 @@ Transfer/sec:    286.73KB
 Running 10s test @ http://127.0.0.1:8081/sqla-asyncpg
   2 threads and 10 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency    14.75ms   36.46ms 456.30ms   96.96%
-    Req/Sec   554.40     78.76   620.00     93.88%
-  10834 requests in 10.01s, 11.79MB read
-Requests/sec:   1082.42
-Transfer/sec:      1.18MB
+    Latency    13.88ms   26.73ms 325.39ms   97.22%
+    Req/Sec   501.71     58.22   560.00     94.39%
+  9815 requests in 10.01s, 11.42MB read
+Requests/sec:    980.73
+Transfer/sec:      1.14MB
 
 Running 10s test @ http://127.0.0.1:8081/sqla-asyncpg
   2 threads and 10 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     7.80ms    1.47ms  41.45ms   95.81%
-    Req/Sec   646.18     28.09   700.00     87.00%
-  12867 requests in 10.01s, 2.00MB read
-Requests/sec:   1285.95
-Transfer/sec:    204.65KB
+    Latency     8.31ms    1.50ms  43.24ms   98.12%
+    Req/Sec   606.59     30.71   670.00     75.00%
+  12080 requests in 10.01s, 1.88MB read
+Requests/sec:   1207.34
+Transfer/sec:    192.14KB
 ```
+
 
 ### SQLAlchemy + psycopg2
 
@@ -158,21 +235,22 @@ Transfer/sec:    204.65KB
 Running 10s test @ http://127.0.0.1:8081/sqla-psycopg2
   2 threads and 10 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency    12.90ms    3.72ms  52.08ms   85.32%
-    Req/Sec   393.07     30.08   450.00     81.50%
-  7830 requests in 10.01s, 8.52MB read
-Requests/sec:    782.33
-Transfer/sec:      0.85MB
+    Latency    13.93ms    4.31ms  55.21ms   91.35%
+    Req/Sec   365.65     35.07   420.00     85.50%
+  7286 requests in 10.00s, 8.48MB read
+Requests/sec:    728.31
+Transfer/sec:    867.71KB
 
 Running 10s test @ http://127.0.0.1:8081/sqla-psycopg2
   2 threads and 10 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency    10.07ms    2.37ms  48.27ms   81.52%
-    Req/Sec   499.86     28.11   560.00     71.50%
-  9955 requests in 10.01s, 1.55MB read
-Requests/sec:    994.92
-Transfer/sec:    158.37KB
+    Latency    10.37ms    1.75ms  20.04ms   71.56%
+    Req/Sec   483.10     22.12   540.00     66.00%
+  9625 requests in 10.01s, 1.50MB read
+Requests/sec:    962.00
+Transfer/sec:    153.13KB
 ```
+
 
 ### Peewee no pool
 
@@ -180,46 +258,50 @@ Transfer/sec:    158.37KB
 Running 10s test @ http://127.0.0.1:8081/peewee-no-pool
   2 threads and 10 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency    11.27ms    6.66ms  88.68ms   94.42%
-    Req/Sec   446.70     79.52   555.00     80.00%
-  8897 requests in 10.00s, 1.63MB read
-  Socket errors: connect 0, read 8847, write 0, timeout 0
-  Non-2xx or 3xx responses: 8730
-Requests/sec:    889.51
-Transfer/sec:    166.91KB
+    Latency    13.72ms    7.28ms  86.89ms   94.49%
+    Req/Sec   366.15     53.43   440.00     78.00%
+  7292 requests in 10.01s, 1.28MB read
+  Socket errors: connect 0, read 7222, write 0, timeout 0
+  Non-2xx or 3xx responses: 7222
+Requests/sec:    728.74
+Transfer/sec:    130.97KB
 
 Running 10s test @ http://127.0.0.1:8081/peewee-no-pool
   2 threads and 10 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency    10.58ms    5.44ms  59.96ms   97.17%
-    Req/Sec   470.27     55.31   550.00     89.50%
-  9366 requests in 10.00s, 1.55MB read
-  Socket errors: connect 0, read 9364, write 0, timeout 0
-  Non-2xx or 3xx responses: 9366
-Requests/sec:    936.26
-Transfer/sec:    159.09KB
+    Latency    13.28ms    6.70ms  66.40ms   96.18%
+    Req/Sec   375.79     50.88   444.00     88.00%
+  7482 requests in 10.00s, 1.24MB read
+  Socket errors: connect 0, read 7481, write 0, timeout 0
+  Non-2xx or 3xx responses: 7482
+Requests/sec:    748.01
+Transfer/sec:    127.10KB
 ```
+
 
 ### Peewee
 
 ```
-Running 10s test @ http://127.0.0.1:8081/
+Running 10s test @ http://127.0.0.1:8081/peewee
   2 threads and 10 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     1.08ms    1.91ms  34.21ms   99.07%
-    Req/Sec     5.35k   302.00     5.99k    92.08%
-  107480 requests in 10.10s, 15.79MB read
-  Non-2xx or 3xx responses: 107480
-Requests/sec:  10641.67
-Transfer/sec:      1.56MB
+    Latency    14.04ms    7.62ms  93.55ms   93.36%
+    Req/Sec   358.57     57.45   444.00     77.50%
+  7145 requests in 10.01s, 1.29MB read
+  Socket errors: connect 0, read 7044, write 0, timeout 0
+  Non-2xx or 3xx responses: 7044
+Requests/sec:    714.13
+Transfer/sec:    131.66KB
 
-Running 10s test @ http://127.0.0.1:8081/
+Running 10s test @ http://127.0.0.1:8081/peewee
   2 threads and 10 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     1.27ms    1.61ms  34.78ms   99.36%
-    Req/Sec     4.20k   194.78     4.37k    97.52%
-  84455 requests in 10.10s, 12.40MB read
-  Non-2xx or 3xx responses: 84455
-Requests/sec:   8362.31
-Transfer/sec:      1.23MB
+    Latency    13.84ms    7.32ms  75.47ms   94.40%
+    Req/Sec   362.44     55.53   444.00     86.50%
+  7221 requests in 10.01s, 1.20MB read
+  Socket errors: connect 0, read 7158, write 0, timeout 0
+  Non-2xx or 3xx responses: 7160
+Requests/sec:    721.59
+Transfer/sec:    122.55KB
 ```
+

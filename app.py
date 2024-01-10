@@ -1,3 +1,6 @@
+from dataclasses import dataclass
+from datetime import datetime
+from enum import Enum
 from typing import List
 
 import aiopg
@@ -446,3 +449,63 @@ async def create_piccolo(name: str = Form(...), _=Depends(piccolo_transaction)) 
         .run()
     )
     return result[0][TaskPiccolo.id]
+
+
+# Test response model validation -------------------------------------------------------
+
+
+class Status(Enum):
+    pending = 1
+    done = 2
+    error = 3
+
+
+@dataclass(slots=True)
+class DataclassResponse:
+    id: int
+    name: str
+    status: Status
+    created_at: datetime
+
+
+class PydanticResponse(BaseModel):
+    id: int
+    name: str
+    status: Status
+    created_at: datetime
+
+
+resp = [
+    dict(id=id_, name=f"foo {id_}", status=Status.pending, created_at=datetime.now())
+    for id_ in range(30)
+]
+
+
+@app.get("/dict")
+async def list_dict():
+    return resp
+
+
+@app.get("/dict/{id}")
+async def get_dict(id: int):
+    return resp[id]
+
+
+@app.get("/dataclass", response_model=list[DataclassResponse])
+async def list_dataclass():
+    return resp
+
+
+@app.get("/dataclass/{id}", response_model=DataclassResponse)
+async def get_dataclass(id: int):
+    return resp[id]
+
+
+@app.get("/pydantic", response_model=list[PydanticResponse])
+async def list_pydantic():
+    return resp
+
+
+@app.get("/pydantic/{id}", response_model=PydanticResponse)
+async def get_pydantic(id: int):
+    return resp[id]
