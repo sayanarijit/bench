@@ -16,6 +16,9 @@ function bench {
   kill $pid &> /dev/null
 }
 
+# bench 'No transaction' no-transaction
+# bench 'Piccolo transaction' piccolo-transaction
+
 bench 'No Response Model' no-resp-model
 bench 'Dict' dict
 bench 'Dataclass' dataclass

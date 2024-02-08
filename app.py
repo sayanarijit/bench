@@ -24,6 +24,7 @@ import piccolo_conf
 
 MAX_CONN = 20
 
+
 # Peewee -------------------------------------------------------------------------------
 peeweedb = PooledPostgresqlExtDatabase(
     "postgres",
@@ -133,6 +134,17 @@ asyncpgdb = configure_asyncpg(
     max_size=MAX_CONN,
     init_db=phony,
 )
+
+
+@app.get("/no-transaction", response_model=list[bool])
+async def list_no_trancsction():
+    return [True]
+
+
+@app.get("/no-transaction/{id}", response_model=bool)
+async def get_no_trancsction():
+    return True
+
 
 # Pypika -------------------------------------------------------------------------------
 
@@ -347,6 +359,16 @@ def get_peewee(id: int, _=Depends(peewee_transaction)):
     with peeweedb.atomic():
         result = TaskPeewee.select().where(TaskPeewee.id == id).dicts()
         return result[0]
+
+
+@app.get("/piccolo-transaction", response_model=list[bool])
+async def list_piccolo_trancsction(_=Depends(piccolo_transaction)):
+    return [True]
+
+
+@app.get("/piccolo-transaction/{id}", response_model=bool)
+async def get_piccolo_trancsction(id: int, _=Depends(piccolo_transaction)):
+    return True
 
 
 @app.get("/piccolo", response_model=List[TaskDTO])
